@@ -186,7 +186,7 @@ namespace MonoTests.System.Web.UI.WebControls
 
 			s1 = new Unit (".9em");
 			Assert.AreEqual (s1.Type, UnitType.Em, "B1");
-			Assert.AreEqual (0.9d, s1.Value, "B2");
+			Assert.AreEqual ((double) 0.9f, s1.Value, "B2"); // webForCore: Unit stores the value as Single
 			Assert.AreEqual ("0.9em", s1.ToString (), "B3");
 		}
 
@@ -313,11 +313,13 @@ namespace MonoTests.System.Web.UI.WebControls
 		}
 	
 		[Test]
-		[ExpectedException (typeof (FormatException))]
+		// webForCore: Microsoft's Unit truncates a fractional pixel value instead of throwing
+		// ("if (type == UnitType.Pixel) this.value = (int)this.value;", referencesource Unit.cs).
 		public void IncorrectConstructor9()
 		{
-		    // throws because floating point values are not valid for Pixel.
-		    Unit a = new Unit("34.4px");
+			Unit a = new Unit("34.4px");
+			Assert.AreEqual (UnitType.Pixel, a.Type, "type");
+			Assert.AreEqual (34d, a.Value, "value");
 		}
 
 		[Test]
