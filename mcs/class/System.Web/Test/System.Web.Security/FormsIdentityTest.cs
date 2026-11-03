@@ -38,16 +38,17 @@ namespace MonoTests.System.Web.Security {
 	public class FormsIdentityTest {
 
 		[Test]
+		// webForCore: Microsoft's FormsIdentity(FormsAuthenticationTicket) throws ArgumentNullException("ticket")
+		// (referencesource Security/FormsIdentity.cs:68); Mono accepted null.
+		[ExpectedException (typeof (ArgumentNullException))]
 		public void Null ()
 		{
-			FormsIdentity identity = new FormsIdentity (null);
-			Assert.AreEqual ("Forms", identity.AuthenticationType, "AuthenticationType");
-			Assert.IsTrue (identity.IsAuthenticated, "IsAuthenticated");
-			Assert.IsNull (identity.Ticket, "Ticket");
+			new FormsIdentity (null);
 		}
 
 		[Test]
-		[ExpectedException (typeof (NullReferenceException))]
+		// webForCore: see Null (); Microsoft throws in the constructor, before Name is read.
+		[ExpectedException (typeof (ArgumentNullException))]
 		public void Null_Name ()
 		{
 			FormsIdentity identity = new FormsIdentity (null);
