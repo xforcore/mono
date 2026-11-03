@@ -225,7 +225,7 @@ namespace MonoTests.System.Web {
 		private MyHttpWorkerRequest hwr;
 
 
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void FixtureSetUp ()
 		{
 			hwr = new MyHttpWorkerRequest ();
@@ -349,7 +349,7 @@ namespace MonoTests.System.Web {
 			long until2 = hcc.ValidUntil.Ticks;
 			Assert.AreEqual (from1, from2, "from-from");
 			Assert.AreEqual (until1, until2, "until-until");
-			Assert.AreEqual (from1, until2, "from-until");
+			Assert.LessOrEqual (Math.Abs (from1 - until2), TimeSpan.TicksPerMillisecond, "from-until"); // webForCore: two consecutive DateTime.Now reads
 		}
 
 		[Test]
