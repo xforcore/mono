@@ -264,7 +264,8 @@ namespace MonoTests.System.Web.Hosting {
 			return MakeHost ("/appVirtualDir");
 		}
 		
-		[Test] public void AppDomainTests ()
+		[Test] [Ignore ("webForCore: needs ApplicationHost.CreateApplicationHost to create a new AppDomain; .NET has one per process")]
+		public void AppDomainTests ()
 		{
 			Host h = MakeHost ();
 
@@ -273,6 +274,7 @@ namespace MonoTests.System.Web.Hosting {
 
 		[Test]
 		[ExpectedException(typeof(ArgumentNullException))]
+		[Ignore ("webForCore: needs ApplicationHost.CreateApplicationHost to create a new AppDomain; .NET has one per process")]
 		public void AppDomain_MapPath1 ()
 		{
 			Host h = MakeHost ();
@@ -282,6 +284,7 @@ namespace MonoTests.System.Web.Hosting {
 
 		[Test]
 		[ExpectedException(typeof(ArgumentNullException))]
+		[Ignore ("webForCore: needs ApplicationHost.CreateApplicationHost to create a new AppDomain; .NET has one per process")]
 		public void AppDomain_MapPath2 ()
 		{
 			Host h = MakeHost ();
@@ -291,6 +294,7 @@ namespace MonoTests.System.Web.Hosting {
 
 		[Test]
 		[ExpectedException(typeof(ArgumentNullException))]
+		[Ignore ("webForCore: needs ApplicationHost.CreateApplicationHost to create a new AppDomain; .NET has one per process")]
 		public void AppDomain_MapPath3 ()
 		{
 			Host h = MakeHost ();
@@ -299,6 +303,7 @@ namespace MonoTests.System.Web.Hosting {
 		}
 
 		[Test]
+		[Ignore ("webForCore: needs ApplicationHost.CreateApplicationHost to create a new AppDomain; .NET has one per process")]
 		public void AppDomain_MapPath4 ()
 		{
 			Host h = MakeHost ("/");
