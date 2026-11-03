@@ -512,7 +512,7 @@ namespace MonoTests.System.Web {
 
 			unknown = (UnknownResponseHeader) f.UnknownResponseHeaders ["X-AspNet-Version"];
 			Assert.AreEqual ("X-AspNet-Version", unknown.Name, "#C2");
-			Assert.AreEqual (Environment.Version.ToString (3), unknown.Value, "#C3");
+			Assert.AreEqual ("4.0.30319", unknown.Value, "#C3"); // webForCore: the .NET Framework 4.x X-AspNet-Version value
 
 			unknown = (UnknownResponseHeader) f.UnknownResponseHeaders ["Content-Disposition"];
 			Assert.AreEqual ("Content-Disposition", unknown.Name, "#C4");
@@ -621,7 +621,7 @@ namespace MonoTests.System.Web {
 			Assert.AreEqual (1, f.UnknownResponseHeaders.Count, "#C1");
 			UnknownResponseHeader unknown = (UnknownResponseHeader) f.UnknownResponseHeaders ["X-AspNet-Version"];
 			Assert.AreEqual ("X-AspNet-Version", unknown.Name, "#C2");
-			Assert.AreEqual (Environment.Version.ToString (3), unknown.Value, "#C3");
+			Assert.AreEqual ("4.0.30319", unknown.Value, "#C3"); // webForCore: the .NET Framework 4.x X-AspNet-Version value
 		}
 
 		[Test]
@@ -912,14 +912,18 @@ namespace MonoTests.System.Web {
 		}
 
 		[Test]
+		// webForCore: Microsoft's HttpResponseStream.Write throws ArgumentException when offset + count exceeds the buffer
+		// (referencesource HttpWriter.cs:727); Mono clamped the count.
 		public void Write_Count_Overflow ()
 		{
 			byte [] buffer;
 
 			buffer = Encoding.UTF8.GetBytes ("Mono");
-			out_stream.Write (buffer, 0, buffer.Length + 5);
+			Assert.Throws<ArgumentException> (() => out_stream.Write (buffer, 0, buffer.Length + 5), "#1");
+			out_stream.Write (buffer, 0, buffer.Length);
 			buffer = Encoding.UTF8.GetBytes ("Just Rocks!!");
-			out_stream.Write (buffer, 5, buffer.Length - 2);
+			Assert.Throws<ArgumentException> (() => out_stream.Write (buffer, 5, buffer.Length - 2), "#2");
+			out_stream.Write (buffer, 5, buffer.Length - 5);
 			response.Flush ();
 
 			string output = Encoding.UTF8.GetString (worker.data);
@@ -944,31 +948,15 @@ namespace MonoTests.System.Web {
 		}
 
 		[Test]
+		// webForCore: Microsoft checks offset < 0, count < 0, then buffer.Length - offset < count (ArgumentException), and
+		// returns for count == 0 (referencesource HttpWriter.cs:721-729). So offset == length with count 0 is accepted and
+		// offset > length throws ArgumentException; Mono threw ArgumentOutOfRangeException for both.
 		public void Write_Offset_Overflow ()
 		{
 			byte [] buffer = new byte [] { 0x0a, 0x1f, 0x2d };
 
-			// offset == buffer length
-			try {
-				out_stream.Write (buffer, buffer.Length, 0);
-				Assert.Fail ("#A1");
-			} catch (ArgumentOutOfRangeException ex) {
-				Assert.AreEqual (typeof (ArgumentOutOfRangeException), ex.GetType (), "#A2");
-				Assert.IsNull (ex.InnerException, "#A3");
-				Assert.IsNotNull (ex.Message, "#A4");
-				Assert.AreEqual ("offset", ex.ParamName, "#A5");
-			}
-
-			// offset > buffer length
-			try {
-				out_stream.Write (buffer, buffer.Length + 1, 0);
-				Assert.Fail ("#B1");
-			} catch (ArgumentOutOfRangeException ex) {
-				Assert.AreEqual (typeof (ArgumentOutOfRangeException), ex.GetType (), "#B2");
-				Assert.IsNull (ex.InnerException, "#B3");
-				Assert.IsNotNull (ex.Message, "#B4");
-				Assert.AreEqual ("offset", ex.ParamName, "#B5");
-			}
+			out_stream.Write (buffer, buffer.Length, 0);
+			Assert.Throws<ArgumentException> (() => out_stream.Write (buffer, buffer.Length + 1, 0), "#B1");
 
 			response.Flush ();
 			Assert.AreEqual (0, worker.data_len);
