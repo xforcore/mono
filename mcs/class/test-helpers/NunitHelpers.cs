@@ -58,7 +58,7 @@ namespace NUnit.Framework
 	{
 		public static void Contains(string expected, string actual, string message = null, params object[] args)
 		{
-			Assert.That(actual, Is.StringContaining (expected), message, args);
+			Assert.That(actual, Does.Contain (expected), message, args);
 		}
 
 		public static void StartsWith(string expected, string actual, string message = null, params object[] args)
