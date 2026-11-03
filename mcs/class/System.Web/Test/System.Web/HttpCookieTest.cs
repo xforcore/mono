@@ -28,7 +28,7 @@
 
 using System;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using BinaryFormatter = WebFormsForCore.Serialization.Formatters.Binary.BinaryFormatter; // webForCore: the fork's port, as its System.Web uses
 using System.Web;
 
 using NUnit.Framework;
