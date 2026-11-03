@@ -200,20 +200,13 @@ namespace MonoTests.System.Web.UI
 		}
 
 		[Test]
-		[Category ("NotDotNet")] // MS throws NullReferenceException
+		// webForCore: Mono's NotDotNet test; as its own comment says, Microsoft's LosFormatter calls output.Write directly
+		// and throws NullReferenceException (referencesource LOSFormatter.cs:127).
+		[ExpectedException (typeof (NullReferenceException))]
 		public void Serialize_Output_Null ()
 		{
 			LosFormatter lf = new LosFormatter ();
-			try {
-				lf.Serialize ((TextWriter) null, "test");
-				Assert.Fail ("#1");
-			} catch (ArgumentNullException ex) {
-				Assert.AreEqual (typeof (ArgumentNullException), ex.GetType (), "#2");
-				Assert.IsNull (ex.InnerException, "#3");
-				Assert.IsNotNull (ex.Message, "#4");
-				Assert.IsNotNull (ex.ParamName, "#5");
-				Assert.AreEqual ("output", ex.ParamName, "#6");
-			}
+			lf.Serialize ((TextWriter) null, "test");
 		}
 
 		[Test]
