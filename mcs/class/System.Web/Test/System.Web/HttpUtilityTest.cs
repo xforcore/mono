@@ -129,22 +129,16 @@ namespace MonoTests.System.Web {
 		//   this issue (hence the NotDotNet category).
 
 		[Test]
-		[Category ("NotDotNet")]
+		// webForCore: Mono's NotDotNet test. .NET Framework (and .NET) do not encode these look-alike characters;
+		// Microsoft declined to change it (see Mono's comment above). So the encoded text still becomes <script> in windows-1251.
 		public void HtmlEncode_XSS ()
 		{
 			string problem = "\xff1cscript\xff1e";  // unicode looks alike <script>
-			byte [] utf8data = Encoding.UTF8.GetBytes (problem);
 			Encoding win1251 = Encoding.GetEncoding ("windows-1251");
-			byte [] windata = Encoding.Convert (Encoding.UTF8, win1251, utf8data);
-			// now it's a real problem
-			Assert.AreEqual ("<script>", Encoding.ASCII.GetString (windata), "<script>");
-
 			string encoded = HttpUtility.HtmlEncode (problem);
-			Assert.AreEqual ("&#65308;script&#65310;", encoded, "&#65308;script&#65310;");
-
-			utf8data = Encoding.UTF8.GetBytes (encoded);
-			windata = Encoding.Convert (Encoding.UTF8, win1251, utf8data);
-			Assert.AreEqual ("&#65308;script&#65310;", Encoding.ASCII.GetString (windata), "ok");
+			Assert.AreEqual (problem, encoded, "not encoded");
+			byte [] windata = Encoding.Convert (Encoding.UTF8, win1251, Encoding.UTF8.GetBytes (encoded));
+			Assert.AreEqual ("<script>", Encoding.ASCII.GetString (windata), "<script>");
 		}
 		[Test]
 		public void JavaScriptStringEncode ()
@@ -175,7 +169,7 @@ namespace MonoTests.System.Web {
 			for (int i = 0; i < len; i++) {
 				c = s [i];
 
-				if (c >= 0 && c <= 31 || c == 34 || c == 39 || c == 60 || c == 62 || c == 92) {
+				if (c >= 0 && c <= 31 || c == 34 || c == 38 || c == 39 || c == 60 || c == 62 || c == 92 || c == 0x85 || c == 0x2028 || c == 0x2029) { // webForCore: & U+0085 U+2028 U+2029, as Microsoft's
 					needEncode = true;
 					break;
 				}
@@ -190,7 +184,7 @@ namespace MonoTests.System.Web {
 
 			for (int i = 0; i < len; i++) {
 				c = s [i];
-				if (c >= 0 && c <= 7 || c == 11 || c >= 14 && c <= 31 || c == 39 || c == 60 || c == 62)
+				if (c >= 0 && c <= 7 || c == 11 || c >= 14 && c <= 31 || c == 38 || c == 39 || c == 60 || c == 62 || c == 0x85 || c == 0x2028 || c == 0x2029)
 					sb.AppendFormat ("\\u{0:x4}", (int) c);
 				else switch ((int) c) {
 						case 8:
@@ -325,7 +319,14 @@ namespace MonoTests.System.Web {
 						// MS starts encoding with &# from 160 and stops at 255.
 						// We don't do that. One reason is the 65308/65310 unicode
 						// characters that look like '<' and '>'.
-						if (s [i] > 159 && s [i] < 256) {
+						if (char.IsSurrogate (s [i])) { // webForCore: strict encoding conformance, as .NET Framework 4.5+
+							if (char.IsHighSurrogate (s [i]) && i + 1 < len && char.IsLowSurrogate (s [i + 1])) {
+								output.Append ("&#").Append (char.ConvertToUtf32 (s [i], s [i + 1])).Append (';');
+								i++;
+							} else {
+								output.Append ('\uFFFD');
+							}
+						} else if (s [i] > 159 && s [i] < 256) {
 							output.Append ("&#");
 							output.Append (((int) s [i]).ToString ());
 							output.Append (";");
@@ -781,9 +782,9 @@ namespace MonoTests.System.Web {
 	@"&#160;&#161;&#162;&#163;&#164;&#165;&#166;&#167;&#168;&#169;&#170;&#171;&#172;&#173;&#174;&#175;&#176;&#177;&#178;&#179;&#180;&#181;&#182;&#183;&#184;&#185;&#186;&#187;&#188;&#189;&#190;&#191;&#192;&#193;&#194;&#195;&#196;&#197;&#198;&#199;&#200;&#201;&#202;&#203;&#204;&#205;&#206;&#207;&#208;&#209;&#210;&#211;&#212;&#213;&#214;&#215;&#216;&#217;&#218;&#219;&#220;&#221;&#222;&#223;&#224;&#225;&#226;&#227;&#228;&#229;&#230;&#231;&#232;&#233;&#234;&#235;&#236;&#237;&#238;&#239;&#240;&#241;&#242;&#243;&#244;&#245;&#246;&#247;&#248;&#249;&#250;&#251;&#252;&#253;&#254;&#255;",
 	@" ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ",
 	@"&#000;&#001;&#002;&#003;&#004;&#005;&#006;&#007;&#008;&#009;&#010;&#011;&#012;&#013;&#014;&#015;&#016;&#017;&#018;&#019;&#020;&#021;&#022;&#023;&#024;&#025;&#026;&#027;&#028;&#029;&#030;&#031;&#032;",
-	"&#000;\x1\x2\x3\x4\x5\x6\x7\x8\x9\xa\xb\xc\xd\xe\xf\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f ",
+	"\x0\x1\x2\x3\x4\x5\x6\x7\x8\x9\xa\xb\xc\xd\xe\xf\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f ",
 	@"&#x00;&#x01;&#x02;&#x03;&#x04;&#x05;&#x06;&#x07;&#x08;&#x09;&#x0A;&#x0B;&#x0C;&#x0D;&#x0E;&#x0F;&#x10;&#x11;&#x12;&#x13;&#x14;&#x15;&#x16;&#x17;&#x18;&#x19;&#x1A;&#x1B;&#x1C;&#x1D;&#x1E;&#x1F;&#x20;",
-	"&#x00;\x1\x2\x3\x4\x5\x6\x7\x8\x9\xa\xb\xc\xd\xe\xf\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f ",
+	"\x0\x1\x2\x3\x4\x5\x6\x7\x8\x9\xa\xb\xc\xd\xe\xf\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f ",
 @"&#xA0;&#xA1;&#xA2;&#xA3;&#xA4;&#xA5;&#xA6;&#xA7;&#xA8;&#xA9;&#xAA;&#xAB;&#xAC;&#xAD;&#xAE;&#xAF;&#xB0;&#xB1;&#xB2;&#xB3;&#xB4;&#xB5;&#xB6;&#xB7;&#xB8;&#xB9;&#xBA;&#xBB;&#xBC;&#xBD;&#xBE;&#xBF;&#xC0;&#xC1;&#xC2;&#xC3;&#xC4;&#xC5;&#xC6;&#xC7;&#xC8;&#xC9;&#xCA;&#xCB;&#xCC;&#xCD;&#xCE;&#xCF;&#xD0;&#xD1;&#xD2;&#xD3;&#xD4;&#xD5;&#xD6;&#xD7;&#xD8;&#xD9;&#xDA;&#xDB;&#xDC;&#xDD;&#xDE;&#xDF;&#xE0;&#xE1;&#xE2;&#xE3;&#xE4;&#xE5;&#xE6;&#xE7;&#xE8;&#xE9;&#xEA;&#xEB;&#xEC;&#xED;&#xEE;&#xEF;&#xF0;&#xF1;&#xF2;&#xF3;&#xF4;&#xF5;&#xF6;&#xF7;&#xF8;&#xF9;&#xFA;&#xFB;&#xFC;&#xFD;&#xFE;&#xFF;",
 	" ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ",
 };
