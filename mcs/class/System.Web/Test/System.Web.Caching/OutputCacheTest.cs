@@ -29,7 +29,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
+using BinaryFormatter = WebFormsForCore.Serialization.Formatters.Binary.BinaryFormatter; // webForCore: the fork's port, as its System.Web uses
 using System.Text;
 using System.Web;
 using System.Web.Caching;
