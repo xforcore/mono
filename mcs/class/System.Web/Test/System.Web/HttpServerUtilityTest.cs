@@ -39,7 +39,7 @@ namespace MonoTests.System.Web {
 
 		private HttpApplication _app;
 
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void FixtureSetUp ()
 		{
 			_app = new HttpApplication ();
@@ -64,22 +64,16 @@ namespace MonoTests.System.Web {
 		//   this issue (hence the NotDotNet category).
 
 		[Test]
-		[Category ("NotDotNet")]
+		// webForCore: Mono's NotDotNet test. .NET Framework (and .NET) do not encode these look-alike characters;
+		// Microsoft declined to change it (see Mono's comment above). So the encoded text still becomes <script> in windows-1251.
 		public void HtmlEncode_XSS ()
 		{
 			string problem = "\xff1cscript\xff1e";  // unicode looks alike <script>
-			byte[] utf8data = Encoding.UTF8.GetBytes (problem);
 			Encoding win1251 = Encoding.GetEncoding ("windows-1251");
-			byte[] windata = Encoding.Convert (Encoding.UTF8, win1251, utf8data);
-			// now it's a real problem
-			Assert.AreEqual ("<script>", Encoding.ASCII.GetString (windata), "<script>");
-
 			string encoded = Server.HtmlEncode (problem);
-			Assert.AreEqual ("&#65308;script&#65310;", encoded, "&#65308;script&#65310;");
-			
-			utf8data = Encoding.UTF8.GetBytes (encoded);
-			windata = Encoding.Convert (Encoding.UTF8, win1251, utf8data);
-			Assert.AreEqual ("&#65308;script&#65310;", Encoding.ASCII.GetString (windata), "ok");
+			Assert.AreEqual (problem, encoded, "not encoded");
+			byte [] windata = Encoding.Convert (Encoding.UTF8, win1251, Encoding.UTF8.GetBytes (encoded));
+			Assert.AreEqual ("<script>", Encoding.ASCII.GetString (windata), "<script>");
 		}
 
 		[Test]
