@@ -56,10 +56,11 @@ namespace MonoCasTests.System.Web.UI {
 			changed = false;
 
 			a.Clear ();
-			Assert.AreEqual (false, changed, "DB2");
+			Assert.AreEqual (true, changed, "DB2"); // webForCore: Microsoft's Clear() raises Changed
+			changed = false;
 			
 			a.Remove (b);
-			Assert.AreEqual (true, changed, "DB3");
+			Assert.AreEqual (false, changed, "DB3"); // webForCore: b is no longer present, so Remove does not raise Changed
 		}
 	}
 }
