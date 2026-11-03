@@ -30,6 +30,7 @@
 
 using System.CodeDom;
 using System.CodeDom.Compiler;
+using CodeDomProvider = WebFormsForCore.CodeDom.Compiler.CodeDomProvider; // webForCore: System.Web's provider type
 using System.Collections;
 using System.ComponentModel.Design;
 using System.Reflection;
