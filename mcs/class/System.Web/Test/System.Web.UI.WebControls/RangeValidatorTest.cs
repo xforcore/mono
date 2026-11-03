@@ -157,7 +157,7 @@ namespace MonoTests.System.Web.UI.WebControls
 			p.Enabled = true;
 			p.EnableViewState = true;
 
-			Assert.AreEqual("<span style=\"color:Red;\">aw shucks</span>", p.Render(), "R1");
+			Assert.AreEqual("<span>aw shucks</span>", p.Render(), "R1"); // webForCore: no default Red with rendering compatibility 4.0
 		}
 
 
