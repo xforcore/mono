@@ -44,10 +44,10 @@ namespace MonoCasTests.System.Web {
 
 		private HttpWriter writer;
 
-		[TestFixtureSetUp]
+		[OneTimeSetUp]
 		public void FixtureSetUp ()
 		{
-			HttpContext context = new HttpContext (null);
+			HttpContext context = new HttpContext (new global::System.Web.Hosting.SimpleWorkerRequest ("/", global::System.IO.Path.GetTempPath (), "default.aspx", "", global::System.IO.TextWriter.Null)); // webForCore: was new HttpContext (null), which .NET rejects
 			writer = (HttpWriter) context.Response.Output;
 		}
 
@@ -64,7 +64,9 @@ namespace MonoCasTests.System.Web {
 		}
 
 		[Test]
-		[ExpectedException (typeof (ArgumentOutOfRangeException))]
+		// webForCore: Microsoft's HttpWriter.Write(char[], int, int) throws ArgumentNullException for a null buffer
+		// ("Dev10 Bug 507392: Do as TextWriter does", referencesource HttpWriter.cs:1625); Mono threw ArgumentOutOfRangeException.
+		[ExpectedException (typeof (ArgumentNullException))]
 		public void NullBufferException ()
 		{
 			writer.Write (null, 0, 0);
