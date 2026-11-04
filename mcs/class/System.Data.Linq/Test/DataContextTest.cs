@@ -181,7 +181,8 @@ namespace DbLinqTest {
             DataContext dc = new DataContext(connection);
             Assert.AreEqual(connection, dc.Connection);
 
-            var ex = Assert.Throws<Exception> ( () => new DataContext (new DummyConnection()));
+            // webForCore: .NET Framework throws ArgumentException here (Error.InvalidConnectionArgument); Mono's Error threw Exception (#142).
+            var ex = Assert.Throws<ArgumentException> ( () => new DataContext (new DummyConnection()));
             Assert.Null(ex.InnerException);
             Assert.NotNull(ex.Message);
             Assert.True(ex.Message.IndexOf("'connection'") != -1);
