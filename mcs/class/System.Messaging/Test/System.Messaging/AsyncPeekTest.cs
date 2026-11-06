@@ -51,7 +51,7 @@ namespace MonoTests.System.Messaging
 		public void BeginPeek()
 		{
 			MessageQueue q = MQUtil.GetQueue ();
-			Message s = new Message (new BinaryMessageFormatter ());
+			Message s = new Message (); s.Formatter = new BinaryMessageFormatter (); // messagingForCore: new Message (formatter) is Message (object body) on .NET Framework, which sends the formatter as the body with the default XmlMessageFormatter; the test means a message with that formatter.
 			string body = "foo-" + DateTime.Now.ToString ();
 			s.Body = body;
 			q.Send (s);
@@ -70,7 +70,7 @@ namespace MonoTests.System.Messaging
 		public void BeginPeekWithTimeout()
 		{
 			MessageQueue q = MQUtil.GetQueue ();
-			Message s = new Message (new BinaryMessageFormatter ());
+			Message s = new Message (); s.Formatter = new BinaryMessageFormatter (); // messagingForCore: new Message (formatter) is Message (object body) on .NET Framework, which sends the formatter as the body with the default XmlMessageFormatter; the test means a message with that formatter.
 			string body = "foo-" + DateTime.Now.ToString ();
 			s.Body = body;
 			q.Send (s);
@@ -87,7 +87,7 @@ namespace MonoTests.System.Messaging
 		public void BeginPeekWithStateAndTimeout()
 		{
 			MessageQueue q = MQUtil.GetQueue ();
-			Message s = new Message (new BinaryMessageFormatter ());
+			Message s = new Message (); s.Formatter = new BinaryMessageFormatter (); // messagingForCore: new Message (formatter) is Message (object body) on .NET Framework, which sends the formatter as the body with the default XmlMessageFormatter; the test means a message with that formatter.
 			string body = "foo-" + DateTime.Now.ToString ();
 			s.Body = body;
 			q.Send (s);
@@ -112,7 +112,7 @@ namespace MonoTests.System.Messaging
 		public void BeginPeekWithStateAndTimeoutAndCallback()
 		{
 			MessageQueue q = MQUtil.GetQueue ();
-			Message s = new Message (new BinaryMessageFormatter ());
+			Message s = new Message (); s.Formatter = new BinaryMessageFormatter (); // messagingForCore: new Message (formatter) is Message (object body) on .NET Framework, which sends the formatter as the body with the default XmlMessageFormatter; the test means a message with that formatter.
 			string body = "foo-" + DateTime.Now.ToString ();
 			s.Body = body;
 			q.Send (s);
@@ -122,6 +122,7 @@ namespace MonoTests.System.Messaging
 			Message rMsg = q.EndPeek (result);
 			Assert.AreEqual (body, rMsg.Body, "Async Send Failed, bodies not equal");
 			Assert.AreEqual ("foo", result.AsyncState, "State not passed properly");
+			for (int i = 0; i < 500 && !success; i++) global::System.Threading.Thread.Sleep (10); // messagingForCore: .NET Framework sets the wait handle, then calls the callback (MessageQueue.AsynchronousRequest.RaiseCompletionEvent), so the callback may not have run yet when WaitOne returns.
 			Assert.IsTrue (success, "Callback not run");
 			
 			Assert.IsNotNull (q.Receive (), "Message not peeked");
