@@ -36,8 +36,7 @@ using NUnit.Framework;
 namespace MonoTests.System.Messaging
 {
 	[TestFixture]
-	// messagingForCore: NUnit 3's [Ignore] needs a reason; Mono gave none.
-	[Ignore("Ignored in Mono's suite, without a reason")]
+	// messagingForCore: Mono ignored this fixture, without a reason. Enumerators are in scope (issue #1), so it runs.
 	public class MessageEnumeratorTest {
 		
 		string qName;
